@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마켓 브리핑</title>
+<meta name="description" content="외인수급, 코스피·코스닥·나스닥, 환율, 금리, WTI, 삼성전자·SK하이닉스 등 일일 시장 지표를 매일 자동으로 기록하는 대시보드">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --border: #e0e2e7;
+    --ink: #1a1d23;
+    --ink-soft: #5b6069;
+    --ink-faint: #8b909a;
+    --accent: #ad7a24;
+    --accent-ink: #6b4c15;
+    --accent-wash: #f7ecd8;
+    --up: #c8372f;
+    --up-wash: #fbeae9;
+    --down: #2f5fce;
+    --down-wash: #e9eefb;
+    --flat: #8b909a;
+    --shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 8px 24px -12px rgba(20, 22, 26, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161b;
+      --surface: #1b1e25;
+      --surface-raised: #21242c;
+      --border: #2c3039;
+      --ink: #e8e9ed;
+      --ink-soft: #a3a8b3;
+      --ink-faint: #6c7078;
+      --accent: #d9a544;
+      --accent-ink: #f0cd8d;
+      --accent-wash: #332a16;
+      --up: #e8695f;
+      --up-wash: #3a201f;
+      --down: #7fa0f0;
+      --down-wash: #1c2740;
+      --flat: #6c7078;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14161b;
+    --surface: #1b1e25;
+    --surface-raised: #21242c;
+    --border: #2c3039;
+    --ink: #e8e9ed;
+    --ink-soft: #a3a8b3;
+    --ink-faint: #6c7078;
+    --accent: #d9a544;
+    --accent-ink: #f0cd8d;
+    --accent-wash: #332a16;
+    --up: #e8695f;
+    --up-wash: #3a201f;
+    --down: #7fa0f0;
+    --down-wash: #1c2740;
+    --flat: #6c7078;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header.masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .masthead-title {
+    font-family: "Fraunces", Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.5rem);
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .masthead-sub {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+
+  .snapshot-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 16px;
+    margin-bottom: 4px;
+  }
+
+  .snapshot-date {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 1.4rem;
+    letter-spacing: -0.01em;
+  }
+
+  .snapshot-weekday {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .headline {
+    font-size: 1.02rem;
+    color: var(--ink-soft);
+    margin: 6px 0 24px;
+    max-width: 62ch;
+    text-wrap: balance;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .stat-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .stat-value {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 1.18rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-delta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.76rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+
+  .stat-delta.up { color: var(--up); background: var(--up-wash); }
+  .stat-delta.down { color: var(--down); background: var(--down-wash); }
+  .stat-delta.flat { color: var(--flat); background: transparent; }
+
+  .stat-prev {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .notes-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 44px;
+  }
+
+  .note-tag {
+    font-size: 0.78rem;
+    color: var(--accent-ink);
+    background: var(--accent-wash);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-weight: 500;
+  }
+
+  .section-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 980px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-raised);
+    text-align: right;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  thead th:first-child, tbody td:first-child {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+
+  thead th:first-child { background: var(--surface-raised); z-index: 2; }
+
+  tbody td {
+    padding: 12px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--accent-wash); }
+  tbody tr:hover td:first-child { background: var(--accent-wash); }
+
+  .cell-date {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 0.86rem;
+  }
+
+  .cell-notes {
+    font-family: "IBM Plex Sans", sans-serif;
+    text-align: left;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    white-space: normal;
+    min-width: 220px;
+  }
+
+  .chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 0 4px;
+    margin-left: 2px;
+  }
+  .chip.up { color: var(--up); }
+  .chip.down { color: var(--down); }
+  .chip.flat { color: var(--flat); }
+
+  footer.note {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  footer.note strong { color: var(--ink-soft); }
+  footer.note a { color: var(--accent-ink); }
+
+  @media (max-width: 560px) {
+    .page { padding: 28px 14px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="masthead">
+    <h1 class="masthead-title">마켓 브리핑</h1>
+    <span class="masthead-sub">일일 시장 지표 기록</span>
+  </header>
+
+  <div id="snapshot"></div>
+
+  <div class="section-label">전체 기록</div>
+  <div class="table-scroll">
+    <table id="history-table"></table>
+  </div>
+
+  <footer class="note">
+    <strong>업데이트 방법</strong> — 매 평일 장 마감 후 자동화 작업이 그날의 지표(외인수급, 코스피/코스닥/나스닥, 원달러, 미국채10년/국고채3년, WTI, 삼성전자/SK하이닉스, 달러엔, 특이사항)를 조사해 아래 기록에 한 줄씩 커밋합니다.
+  </footer>
+</div>
+
+<script>
+  const METRICS = [
+    { key: "foreign", label: "외인수급", unit: "조", decimals: 1, signed: true, short: "외인" },
+    { key: "kospi", label: "코스피", unit: "", decimals: 0, short: "코스피" },
+    { key: "kosdaq", label: "코스닥", unit: "", decimals: 0, short: "코스닥" },
+    { key: "nasdaq", label: "나스닥", unit: "", decimals: 0, short: "나스닥" },
+    { key: "usdkrw", label: "원/달러", unit: "원", decimals: 0, short: "원달러" },
+    { key: "usdjpy", label: "달러/엔", unit: "엔", decimals: 2, short: "달러엔" },
+    { key: "ust10y", label: "미국채 10년", unit: "%", decimals: 2, short: "美10Y" },
+    { key: "ktb3y", label: "국고채 3년", unit: "%", decimals: 2, short: "韓3Y" },
+    { key: "wti", label: "WTI", unit: "$", prefix: true, decimals: 0, short: "WTI" },
+    { key: "samsung", label: "삼성전자", unit: "원", decimals: 0, short: "삼성전자" },
+    { key: "hynix", label: "SK하이닉스", unit: "원", decimals: 0, short: "하이닉스" },
+  ];
+
+  // Newest entry last. A new object is appended here after each market close to grow the record.
+  const DATA = [
+    {
+      date: "2026-08-19",
+      headline: "외국인 3.4조 대량 매도 속 코스피·코스닥·반도체 동반 급락, 美·日 장기금리 급등",
+      values: {
+        foreign: -3.4, kospi: 6471, kosdaq: 824, nasdaq: 26289, usdkrw: 1394,
+        usdjpy: 159.09, ust10y: 4.68, ktb3y: 3.80, wti: 85, samsung: 247500, hynix: 1500000,
+      },
+      prev: {
+        foreign: 0.1, kospi: 6869, kosdaq: 834, nasdaq: 26644, usdkrw: 1413,
+        usdjpy: 159.74, ust10y: 4.74, ktb3y: 3.86, wti: 85, samsung: 268500, hynix: 1662000,
+      },
+      notes: ["개인 순매수", "오라클 하락", "일본 30년물 4.1% 사상 최고(NEW)"],
+    },
+  ];
+
+  const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+  function fmtNum(v, decimals) {
+    return v.toLocaleString("ko-KR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function fmtValue(metric, v) {
+    if (v === undefined || v === null) return "—";
+    let s = fmtNum(Math.abs(v), metric.decimals);
+    if (metric.signed) s = (v > 0 ? "+" : v < 0 ? "-" : "") + s;
+    if (metric.prefix) return metric.unit + s;
+    return s + metric.unit;
+  }
+
+  function direction(cur, prev) {
+    if (cur === undefined || cur === null || prev === undefined || prev === null) return "flat";
+    if (cur > prev) return "up";
+    if (cur < prev) return "down";
+    return "flat";
+  }
+
+  function arrow(dir) {
+    return dir === "up" ? "▲" : dir === "down" ? "▼" : "•";
+  }
+
+  function deltaText(metric, cur, prev) {
+    if (cur === undefined || cur === null || prev === undefined || prev === null) return null;
+    const diff = cur - prev;
+    if (diff === 0) return "0";
+    const sign = diff > 0 ? "+" : "-";
+    return sign + fmtNum(Math.abs(diff), metric.decimals) + metric.unit;
+  }
+
+  function renderSnapshot() {
+    const entry = DATA[DATA.length - 1];
+    const d = new Date(entry.date + "T00:00:00");
+    const weekday = WEEKDAYS[d.getDay()];
+
+    let html = `
+      <div class="snapshot-head">
+        <span class="snapshot-date">${entry.date}</span>
+        <span class="snapshot-weekday">${weekday}요일 마감</span>
+      </div>
+      <p class="headline">${entry.headline || ""}</p>
+      <div class="card-grid">`;
+
+    for (const m of METRICS) {
+      const cur = entry.values[m.key];
+      const prev = entry.prev ? entry.prev[m.key] : undefined;
+      const dir = direction(cur, prev);
+      const dt = deltaText(m, cur, prev);
+      html += `
+        <div class="stat-card">
+          <div class="stat-label">${m.label}</div>
+          <div class="stat-value-row">
+            <span class="stat-value">${fmtValue(m, cur)}</span>
+            ${dt !== null ? `<span class="stat-delta ${dir}">${arrow(dir)} ${dt}</span>` : ""}
+          </div>
+          ${prev !== undefined ? `<div class="stat-prev">전일 ${fmtValue(m, prev)}</div>` : ""}
+        </div>`;
+    }
+    html += `</div>`;
+
+    if (entry.notes && entry.notes.length) {
+      html += `<div class="notes-row">` + entry.notes.map(n => `<span class="note-tag">${n}</span>`).join("") + `</div>`;
+    } else {
+      html += `<div style="margin-bottom:44px"></div>`;
+    }
+
+    document.getElementById("snapshot").innerHTML = html;
+  }
+
+  function renderTable() {
+    let thead = "<thead><tr><th>날짜</th>";
+    for (const m of METRICS) thead += `<th>${m.short}</th>`;
+    thead += "<th>특이사항</th></tr></thead>";
+
+    let tbody = "<tbody>";
+    for (let i = DATA.length - 1; i >= 0; i--) {
+      const entry = DATA[i];
+      tbody += `<tr><td class="cell-date">${entry.date}</td>`;
+      for (const m of METRICS) {
+        const cur = entry.values[m.key];
+        const prev = entry.prev ? entry.prev[m.key] : undefined;
+        const dir = direction(cur, prev);
+        tbody += `<td>${fmtValue(m, cur)}${prev !== undefined ? `<span class="chip ${dir}">${arrow(dir)}</span>` : ""}</td>`;
+      }
+      tbody += `<td class="cell-notes">${(entry.notes || []).join(" · ")}</td></tr>`;
+    }
+    tbody += "</tbody>";
+
+    document.getElementById("history-table").innerHTML = thead + tbody;
+  }
+
+  renderSnapshot();
+  renderTable();
+</script>
+</body>
+</html>
